@@ -42,6 +42,7 @@ const fromDay = new Date(_fromDay);
 const toDay = new Date(_toDay);
 
 const pullRequest = fs.readFileSync("./PullRequest.gql").toString();
+const issue = fs.readFileSync("./Issue.gql").toString();
 const repository = fs.readFileSync("./Repository.gql").toString();
 
 const fetchPullRequests = (query, xs = [], cursor = undefined) => {
@@ -84,6 +85,50 @@ const fetchPullRequests = (query, xs = [], cursor = undefined) => {
         ys.concat(xs).length
       );
       return fetchPullRequests(query, ys.concat(xs), startCursor);
+    }
+  );
+};
+
+const fetchIssues = (query, xs = [], cursor = undefined) => {
+  return fetchQuery(query, {
+    login: user,
+    last: 25,
+    before: cursor
+  }).then(
+    ({
+      data: {
+        user: {
+          issues: {
+            pageInfo: { endCursor, startCursor },
+            edges
+          }
+        }
+      }
+    }) => {
+      const ys = edges
+        .filter(({ node: { createdAt } }) => {
+          const d = new Date(createdAt);
+          return (
+            fromDay.getTime() <= d.getTime() && toDay.getTime() >= d.getTime()
+          );
+        })
+        .map(({ node: { title, createdAt, url, author, repository } }) => {
+          return {
+            title,
+            createdAt,
+            url,
+            author,
+            repository
+          };
+        });
+      if (isUpToDate(ys, edges)) {
+        return Promise.resolve(ys.concat(xs));
+      }
+      console.log(
+        "Fetching %dth events of issues...",
+        ys.concat(xs).length
+      );
+      return fetchIssues(query, ys.concat(xs), startCursor);
     }
   );
 };
@@ -161,9 +206,13 @@ const formatElement = ({
 
 Promise.all([
   fetchPullRequests(pullRequest),
+  fetchIssues(issue),
   fetchRepositories(repository)
-]).then(([prs, repositories]) => {
-  const result = groupRequest(prs)
+]).then(([prs, issues, repositories]) => {
+  const merged = prs.concat(issues)
+  const sorted = merged.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+
+  const result = groupRequest(sorted)
     .mergeDeep(groupRepository(repositories))
     .map(ys => ys.map(formatElement))
     .map(ys => ys.join("\n"))

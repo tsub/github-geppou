@@ -1,0 +1,27 @@
+query Issue($login: String!, $last: Int!, $before: String) {
+  user(login: $login) {
+    issues(last: $last, before: $before) {
+      pageInfo {
+        startCursor
+        endCursor
+      }
+      edges {
+        node {
+          title
+          url
+          repository {
+            name
+            owner {
+              login
+            }
+          }
+          createdAt
+          author {
+            login
+            url
+          }
+        }
+      }
+    }
+  }
+}
