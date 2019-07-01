@@ -15,7 +15,7 @@ query Issue($login: String!, $last: Int!, $before: String) {
               login
             }
           }
-          createdAt
+          updatedAt
           author {
             login
             url

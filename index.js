@@ -34,8 +34,8 @@ const fetchQuery = (query, variables) => {
 const isUpToDate = (xs, edges) =>
   xs.length === 0 &&
   edges.every(
-    ({ node: { createdAt } }) =>
-      fromDay.getTime() >= new Date(createdAt).getTime()
+    ({ node: { updatedAt } }) =>
+      fromDay.getTime() >= new Date(updatedAt).getTime()
   );
 
 const fromDay = new Date(_fromDay);
@@ -62,16 +62,16 @@ const fetchPullRequests = (query, xs = [], cursor = undefined) => {
       }
     }) => {
       const ys = edges
-        .filter(({ node: { createdAt } }) => {
-          const d = new Date(createdAt);
+        .filter(({ node: { updatedAt } }) => {
+          const d = new Date(updatedAt);
           return (
             fromDay.getTime() <= d.getTime() && toDay.getTime() >= d.getTime()
           );
         })
-        .map(({ node: { title, createdAt, url, author, repository } }) => {
+        .map(({ node: { title, updatedAt, url, author, repository } }) => {
           return {
             title,
-            createdAt,
+            updatedAt,
             url,
             author,
             repository
@@ -106,16 +106,16 @@ const fetchIssues = (query, xs = [], cursor = undefined) => {
       }
     }) => {
       const ys = edges
-        .filter(({ node: { createdAt } }) => {
-          const d = new Date(createdAt);
+        .filter(({ node: { updatedAt } }) => {
+          const d = new Date(updatedAt);
           return (
             fromDay.getTime() <= d.getTime() && toDay.getTime() >= d.getTime()
           );
         })
-        .map(({ node: { title, createdAt, url, author, repository } }) => {
+        .map(({ node: { title, updatedAt, url, author, repository } }) => {
           return {
             title,
-            createdAt,
+            updatedAt,
             url,
             author,
             repository
@@ -189,14 +189,14 @@ const groupRepository = xs =>
 
 const formatElement = ({
   title,
-  createdAt,
+  updatedAt,
   url,
   author,
   repository,
   name,
   owner
 }) => {
-  const d = new Date(createdAt);
+  const d = new Date(updatedAt);
   const date = `${d.getMonth() + 1}/${d.getDate()}`;
   if (name && owner) {
     return `* ${date}: Repository was created`;
@@ -210,7 +210,7 @@ Promise.all([
   fetchRepositories(repository)
 ]).then(([prs, issues, repositories]) => {
   const merged = prs.concat(issues)
-  const sorted = merged.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+  const sorted = merged.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt))
 
   const result = groupRequest(sorted)
     .mergeDeep(groupRepository(repositories))
