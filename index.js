@@ -201,7 +201,7 @@ const formatElement = ({
   if (name && owner) {
     return `* ${date}: Repository was created`;
   }
-  return `* ${date}: [${title}](${url})`;
+  return `* [${title}](${url})`;
 };
 
 Promise.all([
